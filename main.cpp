@@ -7,7 +7,6 @@
 #include <IRremote.hpp>
 #include "esp_wifi.h"
 #include "ble.hpp"
-#include "ble.cpp"
 
 // --- OLED ---
 #define SCREEN_WIDTH 128

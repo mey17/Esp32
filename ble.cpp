@@ -15,8 +15,8 @@
 #define MAX_TX_POWER ESP_PWR_LVL_P9   // Default
 #endif
 
-BLEAdvertising *pAdvertising;  // global variable
-uint32_t delayMilliseconds = 1000;
+BLEAdvertising *pAdvertising = nullptr;  // Define the variable
+uint32_t delayMilliseconds = 1000;       // Define the variable
 
 void bleSetup() {
   Serial.println("Starting ESP32 BLE");
