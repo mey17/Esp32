@@ -39,6 +39,7 @@ int prevAj = HIGH;
 bool inMainMenu = true;
 bool inWiFiMenu = false;
 bool inDeauthMenu = false;
+bool bleRunning = false;  // Track BLE state
 
 // --- Menu lists ---
 String mainMenu[5] = {"WiFi", "BLE", "Settings", "IR", "Exit"};
@@ -522,7 +523,12 @@ void setup() {
     while (true);
   }
 
-  displayMessage(F("ArmatRF"));
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.setCursor(20, 20);
+  display.println("ArmatRF");
+  display.display();
   delay(1000);
 
   // Init WiFi
@@ -532,7 +538,7 @@ void setup() {
   displayMainMenu(0);
 
   // Initialize BLE
-  bleSetup();  // Call BLE setup from ble.cpp
+  bleSetup();
 }
 
 // --- Loop ---
@@ -559,7 +565,8 @@ void loop() {
         wifiSelected = 0;
         displayWiFiMenu(wifiSelected);
       } else if (mainMenu[mainSelected] == "BLE") {
-        ::loop();  // Call BLE loop from ble.cpp
+        bleRunning = !bleRunning;  // Toggle BLE state
+        Serial.println(bleRunning ? "Starting BLE..." : "Stopping BLE...");
       } else if (mainMenu[mainSelected] == "Settings") {
         display.clearDisplay();
         display.setTextSize(1);
@@ -602,6 +609,11 @@ void loop() {
         displayMainMenu(mainSelected);
       }
     }
+  }
+
+  // Call BLE loop if BLE is running
+  if (bleRunning) {
+    bleLoop();
   }
 
   prevDzax = dzax;

