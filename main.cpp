@@ -6,6 +6,7 @@
 #include <DNSServer.h>
 #include <IRremote.hpp>
 #include "esp_wifi.h"
+#include "ble.hpp"
 #include "ble.cpp"
 
 // --- OLED ---

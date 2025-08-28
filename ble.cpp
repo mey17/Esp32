@@ -1,10 +1,9 @@
+#include "ble.hpp"
 #include <Arduino.h>
-
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <esp_arduino_version.h>
-
 #include "devices.hpp"
 
 // Bluetooth maximum transmit power
