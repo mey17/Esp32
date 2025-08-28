@@ -529,7 +529,7 @@ void setup() {
   displayMainMenu(0);
 
   // Initialize BLE
-  ::setup();  // Call BLE setup from ble.cpp
+  bleSetup();  // Call BLE setup from ble.cpp
 }
 
 // --- Loop ---
