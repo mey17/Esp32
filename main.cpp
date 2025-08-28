@@ -501,6 +501,14 @@ void displayWiFiMenu(int selected) {
   display.display();
 }
 
+void displayMessage(const char *message) {
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.setTextSize(1);
+  display.println(message);
+  display.display();
+}
+
 // --- Setup ---
 void setup() {
   pinMode(Dzax, INPUT_PULLUP);
@@ -514,12 +522,7 @@ void setup() {
     while (true);
   }
 
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-  display.setCursor(20, 20);
-  display.println("ArmatRF");
-  display.display();
+  displayMessage(F("ArmatRF"));
   delay(1000);
 
   // Init WiFi
